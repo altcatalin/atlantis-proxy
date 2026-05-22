@@ -1,0 +1,203 @@
+services:
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  gitea:
+    image: gitea/gitea:1.26
+    ports:
+      - "3000:3000"
+      - "222:22"
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__server__ROOT_URL=http://localhost:3000/
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__webhook__ALLOWED_HOST_LIST=loopback,private
+    volumes:
+      - gitea-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  gitea-bootstrap:
+    image: gitea/gitea:1.26
+    user: "1000:1000"
+    command:
+      [
+        "/bin/sh",
+        "-ec",
+        "gitea admin user create --username \"$$ATLANTIS_GITEA_USER\" --password \"$$ATLANTIS_GITEA_PASSWORD\" --email \"$$ATLANTIS_GITEA_EMAIL\" --admin --must-change-password=false || true; token=\"$$(gitea admin user generate-access-token --username \"$$ATLANTIS_GITEA_USER\" --token-name \"atlantis-proxy-$$(date +%s)\" --scopes \"write:user,write:repository,read:repository,write:issue,read:issue\" --raw)\"; [ -n \"$$token\" ]; printf '%s' \"$$token\" > /data/gitea/atlantis_token",
+      ]
+    environment:
+      - ATLANTIS_GITEA_USER=${ATLANTIS_GITEA_USER:-atlantis}
+      - ATLANTIS_GITEA_PASSWORD=${ATLANTIS_GITEA_PASSWORD:-atlantis}
+      - ATLANTIS_GITEA_EMAIL=${ATLANTIS_GITEA_EMAIL:-atlantis@example.com}
+    volumes:
+      - gitea-data:/data
+    depends_on:
+      gitea:
+        condition: service_healthy
+
+  repo-bootstrap:
+    build:
+      context: .
+      dockerfile: Dockerfile.bootstrap
+    environment:
+      - GITEA_URL=http://gitea:3000
+      - GITEA_TOKEN_FILE=/data/gitea/atlantis_token
+      - GITEA_OWNER=${ATLANTIS_GITEA_USER:-atlantis}
+      - GITEA_REPO=atlantis-benchmark
+      - GITEA_USERNAME=${ATLANTIS_GITEA_USER:-atlantis}
+      - GITEA_WEBHOOK_URL=http://proxy:8000/events
+    volumes:
+      - gitea-data:/data:ro
+    depends_on:
+      gitea-bootstrap:
+        condition: service_completed_successfully
+
+  atlantis-a:
+    build:
+      context: .
+      dockerfile: Dockerfile.atlantis
+    command:
+      [
+        "server",
+        "--port=4141",
+        "--repo-allowlist=*",
+        "--repo-config=/etc/atlantis/atlantis.yaml",
+        "--locking-db-type=redis",
+        "--redis-host=redis",
+        "--use-tf-plugin-cache=false"
+      ]
+    ports:
+      - "4141:4141"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_BACKENDS_KEY=atlantis:backends
+      - ATLANTIS_SELF_URL=http://atlantis-a:4141
+      - ATLANTIS_GITEA_USER=${ATLANTIS_GITEA_USER:-atlantis}
+      - ATLANTIS_GITEA_BASE_URL=http://gitea:3000
+      - ATLANTIS_GITEA_TOKEN_FILE=/data/gitea/atlantis_token
+    volumes:
+      - gitea-data:/data:ro
+      - ./scripts/bootstrap_templates/atlantis.yaml:/etc/atlantis/atlantis.yaml:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      gitea-bootstrap:
+        condition: service_completed_successfully
+      repo-bootstrap:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4141/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  atlantis-b:
+    build:
+      context: .
+      dockerfile: Dockerfile.atlantis
+    command:
+      [
+        "server",
+        "--port=4141",
+        "--repo-allowlist=*",
+        "--repo-config=/etc/atlantis/atlantis.yaml",
+        "--locking-db-type=redis",
+        "--redis-host=redis",
+        "--use-tf-plugin-cache=false"
+      ]
+    ports:
+      - "4142:4141"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_BACKENDS_KEY=atlantis:backends
+      - ATLANTIS_SELF_URL=http://atlantis-b:4141
+      - ATLANTIS_GITEA_USER=${ATLANTIS_GITEA_USER:-atlantis}
+      - ATLANTIS_GITEA_BASE_URL=http://gitea:3000
+      - ATLANTIS_GITEA_TOKEN_FILE=/data/gitea/atlantis_token
+    volumes:
+      - gitea-data:/data:ro
+      - ./scripts/bootstrap_templates/atlantis.yaml:/etc/atlantis/atlantis.yaml:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      gitea-bootstrap:
+        condition: service_completed_successfully
+      repo-bootstrap:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4141/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  proxy:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_BACKENDS_KEY=atlantis:backends
+      - REDIS_STICKY_PREFIX=atlantis:sticky
+      - REDIS_ROUND_ROBIN_KEY=atlantis:rr:index
+      - BACKEND_HEALTH_PATH=/healthz
+      - BACKEND_HEALTH_TIMEOUT_SECONDS=2
+      - UPSTREAM_TIMEOUT_SECONDS=20
+      - LOG_LEVEL=INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+      atlantis-a:
+        condition: service_healthy
+      atlantis-b:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    depends_on:
+      atlantis-a:
+        condition: service_healthy
+      atlantis-b:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+
+volumes:
+  gitea-data:
+  prometheus-data:
+  grafana-data:

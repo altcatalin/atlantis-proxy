@@ -1,0 +1,11 @@
+FROM ghcr.io/runatlantis/atlantis:v0.43.0
+
+USER root
+RUN apk add --no-cache redis
+
+COPY scripts/atlantis-entrypoint.sh /usr/local/bin/atlantis-entrypoint.sh
+RUN chmod +x /usr/local/bin/atlantis-entrypoint.sh
+
+USER atlantis
+ENTRYPOINT ["/usr/local/bin/atlantis-entrypoint.sh"]
+CMD ["server", "--port=4141", "--repo-allowlist=*"]
