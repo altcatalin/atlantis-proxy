@@ -101,17 +101,21 @@ Notes:
 Results:
 
 1. Gitea
-[http://localhost:3000/atlantis/atlantis-benchmark/pulls][http://localhost:3000/atlantis/atlantis-benchmark/pulls]
-[./artifacts/gitea.png](./artifacts/gitea.png)
+[http://localhost:3000/atlantis/atlantis-benchmark/pulls](http://localhost:3000/atlantis/atlantis-benchmark/pulls)  
+
+![./artifacts/gitea.png](./artifacts/gitea.png)
 
 2. Atlantis
-[http://localhost:4141](http://localhost:4141) & [http://localhost:4142](http://localhost:4142)
-[./artifacts/atlantis-a.png](./artifacts/atlantis-a.png)
-[./artifacts/atlantis-b.png](./artifacts/atlantis-b.png)
+[http://localhost:4141](http://localhost:4141) & [http://localhost:4142](http://localhost:4142)  
+
+![./artifacts/atlantis-a.png](./artifacts/atlantis-a.png)  
+
+![./artifacts/atlantis-b.png](./artifacts/atlantis-b.png)
 
 3. Grafana
-[http://localhost:3001/explore?schemaVersion=1&panes=%7B%22odp%22:%7B%22datasource%22:%22PBFA97CFB590B2093%22,%22queries%22:%5B%7B%22refId%22:%22C%22,%22expr%22:%22atlantis_builder_projects%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22%7B%7Bjob%7D%7D%22,%22hide%22:false%7D,%7B%22refId%22:%22D%22,%22expr%22:%22sum%28atlantis_builder_projects%29%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22all%22,%22hide%22:false%7D%5D,%22range%22:%7B%22from%22:%22now-5m%22,%22to%22:%22now%22%7D,%22compact%22:false%7D%7D&orgId=1](http://localhost:3001/explore?schemaVersion=1&panes=%7B%22odp%22:%7B%22datasource%22:%22PBFA97CFB590B2093%22,%22queries%22:%5B%7B%22refId%22:%22C%22,%22expr%22:%22atlantis_builder_projects%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22%7B%7Bjob%7D%7D%22,%22hide%22:false%7D,%7B%22refId%22:%22D%22,%22expr%22:%22sum%28atlantis_builder_projects%29%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22all%22,%22hide%22:false%7D%5D,%22range%22:%7B%22from%22:%22now-5m%22,%22to%22:%22now%22%7D,%22compact%22:false%7D%7D&orgId=1)
-[./artifacts/grafana.png](./artifacts/grafana.png)
+[http://localhost:3001/explore?schemaVersion=1&panes=%7B%22odp%22:%7B%22datasource%22:%22PBFA97CFB590B2093%22,%22queries%22:%5B%7B%22refId%22:%22C%22,%22expr%22:%22atlantis_builder_projects%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22%7B%7Bjob%7D%7D%22,%22hide%22:false%7D,%7B%22refId%22:%22D%22,%22expr%22:%22sum%28atlantis_builder_projects%29%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22all%22,%22hide%22:false%7D%5D,%22range%22:%7B%22from%22:%22now-5m%22,%22to%22:%22now%22%7D,%22compact%22:false%7D%7D&orgId=1](http://localhost:3001/explore?schemaVersion=1&panes=%7B%22odp%22:%7B%22datasource%22:%22PBFA97CFB590B2093%22,%22queries%22:%5B%7B%22refId%22:%22C%22,%22expr%22:%22atlantis_builder_projects%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22%7B%7Bjob%7D%7D%22,%22hide%22:false%7D,%7B%22refId%22:%22D%22,%22expr%22:%22sum%28atlantis_builder_projects%29%22,%22range%22:true,%22instant%22:true,%22datasource%22:%7B%22type%22:%22prometheus%22,%22uid%22:%22PBFA97CFB590B2093%22%7D,%22editorMode%22:%22code%22,%22legendFormat%22:%22all%22,%22hide%22:false%7D%5D,%22range%22:%7B%22from%22:%22now-5m%22,%22to%22:%22now%22%7D,%22compact%22:false%7D%7D&orgId=1)  
+
+![./artifacts/grafana.png](./artifacts/grafana.png)
 
 
 ## Failover test
@@ -129,9 +133,11 @@ Notes:
 Results:
 
 1. Gitea
-[http://localhost:3000/atlantis/atlantis-benchmark/pulls][http://localhost:3000/atlantis/atlantis-benchmark/pulls]
-[./artifacts/gitea_failover_list.png](./artifacts/gitea_failover_list.png)
-[./artifacts/gitea_failover_pr.png](./artifacts/gitea_failover_pr.png)
+[http://localhost:3000/atlantis/atlantis-benchmark/pulls](http://localhost:3000/atlantis/atlantis-benchmark/pulls)  
+
+![./artifacts/gitea_failover_list.png](./artifacts/gitea_failover_list.png)  
+
+![./artifacts/gitea_failover_pr.png](./artifacts/gitea_failover_pr.png)
 
 ## Team-oriented routing option
 
